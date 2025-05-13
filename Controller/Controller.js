@@ -166,6 +166,6 @@ const FetchGetCategorySubCategory = async (req, resp) => {
         resp.status(500).json({ message: err.message })
 
     }
-}
+}//test
 
 module.exports = { RegistrationData, LoginData, ProfileData, CategoryDataInsert, SubCategoryDataInsert, FetchSubCategory, CategoryDetails, insertProductDetails, ProductPriceQunatityDetails, FetchProductDetails, FetchProductData, RegistrationBasedOnOtp, ResendOtp, CreateOrder, OrderDetailsDataFetch, searchData, FetchDataBasedOnSubCategory, FetchGetCategorySubCategory }
