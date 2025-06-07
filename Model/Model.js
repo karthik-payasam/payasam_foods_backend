@@ -67,12 +67,12 @@ const ProfileDataGet = async (userId) => {
         throw err;
     }
 }
-const insertCategory = async (imageName, image) => {
+const insertCategory = async (category_name, category_image, description) => {
     try {
-        console.log("data")
-        const insertQuery = 'INSERT INTO categories (name, image_url) VALUES (?, ?)';
+        console.log("description", description)
+        const insertQuery = 'INSERT INTO categories (name, image_url,description) VALUES (?,?,?)';
 
-        const Categorydetails = await mysql.query(insertQuery, [imageName, image]);
+        const Categorydetails = await mysql.query(insertQuery, [category_name, category_image, description]);
         console.log("dbdata" + Categorydetails);
         return Categorydetails[0];
     }
@@ -132,35 +132,27 @@ const fetchCategoryData = async () => {
         throw err;
     }
 }
-const insertProduct = async (product_name, product_image, description, category_id) => {
+const insertProduct = async (product_name, product_image, description, category_id, weights) => {
 
     try {
         console.log("data")
         const insertQuery = 'INSERT INTO product (product_name, product_image, description, category_id) VALUES (?, ?,?,?)';
 
 
-        const Productdetails = await mysql.query(insertQuery, [product_name, product_image, description, category_id]);
-        console.log("dataplace")
-        return Productdetails;
+        const [Productdetails] = await mysql.query(insertQuery, [product_name, product_image, description, category_id]);
+        const productId = Productdetails.insertId
+        for (let w of weights) {
+            const insertQuery = 'INSERT INTO product_weight (product_id, weight_value, weight_unit, price, stock_quantity) VALUES (?, ?,?,?,?)';
+
+            const Productpricedetails = await mysql.query(insertQuery, [productId, w.weight_value, w.weight_unit, w.price, w.stock_quantity]);
+        }
+        return productId;
     }
     catch (err) {
         throw err;
     }
 }
-const insertProductweightprice = async (product_id, weight_value, weight_unit, price, stock_quantity) => {
 
-    try {
-        console.log("data")
-        const insertQuery = 'INSERT INTO product_weight (product_id, weight_value, weight_unit, price, stock_quantity) VALUES (?, ?,?,?,?)';
-
-        const Productpricedetails = await mysql.query(insertQuery, [product_id, weight_value, weight_unit, price, stock_quantity]);
-        console.log("dataplace")
-        return Productpricedetails;
-    }
-    catch (err) {
-        throw err;
-    }
-}
 const fetchProductData = async (category_id, subcategory_id, sort = 'asc') => {
     try {
         // const query = 'SELECT p.product_name,p.product_image,p.description,pw.weight_value,pw.weight_unit,pw.price FROM product p JOIN product_weight pw ON p.product_id = pw.product_id WHERE p.category_id = ?;'
@@ -168,10 +160,10 @@ const fetchProductData = async (category_id, subcategory_id, sort = 'asc') => {
         console.log("data", category_id, subcategory_id, sort)
         let query;
         if (subcategory_id) {
-            query = 'select p.product_id,p.product_name,p.product_image,p.description,max(w.price) as price from product p join  product_weight w on p.product_id=w.product_id WHERE p.category_id = ? and  p.subcategory_id = ? group by w.product_id order by price ' + sort
+            query = 'select p.product_id,p.product_name,p.product_image,p.description,max(w.price) as price,created_at from product p join  product_weight w on p.product_id=w.product_id WHERE p.category_id = ? and  p.subcategory_id = ? group by w.product_id order by price ' + sort
 
         } else {
-            query = 'select p.product_id, p.product_name, p.product_image,p.description,MAX(w.price) as price from product p JOIN product_weight w ON p.product_id = w.product_id WHERE p.category_id = ? group by p.product_id order by price ' + sort
+            query = 'select p.product_id, p.product_name, p.product_image,p.description,MAX(w.price) as price,created_at from product p JOIN product_weight w ON p.product_id = w.product_id WHERE p.category_id = ? group by p.product_id order by price ' + sort
         }
         return new Promise(async resolve => {
             let [rows, q] = await mysql.query(query, [category_id, subcategory_id]) //.then(async ([rows]) => {
@@ -350,4 +342,105 @@ const FetchGetCategorySubCategoryDetailsDbData = async () => {
 
     })
 }
-module.exports = { RegistrationDb, userExitsOrNot, loginData, verifyPassword, ProfileDataGet, insertCategory, insertSubCategory, fetchCategoryData, fetchSubCategoryDataDetails, insertProduct, insertProductweightprice, fetchProductData, ProductDataDetails, FetchUserDataDetails, UpdatedUserDetailsOfOtp, updateVerifyOtp, UserDataModule, ShippingUserDataModule, OrderModule, OrderDetailsModule, FetchOrderDetails, SearchDbDetails, FetchDataBasedOnSubCategoryFieldDetails, FetchGetCategorySubCategoryDetailsDbData }
+const OrderDataAdmin = async () => {
+    try {
+        const query = 'select * from orders';
+        return new Promise(async resolve => {
+            let [rows] = await mysql.query(query);
+            const c = await Promise.allSettled(rows.map(async r => {
+                const query2 = 'select * from order_user_details where order_id=?;'
+                let [order_user_details] = await mysql.query(query2, [r.id]);
+                r['order_user_Details'] = order_user_details
+                const query3 = 'select * from billing_details where order_id=?;'
+                let [billing_details] = await mysql.query(query3, [r.id]);
+                r['billing_details'] = billing_details
+                const query4 = 'select * from order_details where order_id=?;'
+                let [order_details] = await mysql.query(query4, [r.id]);
+                r['order_details'] = order_details
+
+                return r
+
+            }))
+            resolve(c.map(d => d.value));
+
+        })
+    } catch (error) {
+        throw error;
+    }
+}
+const UserDataAdmin = async () => {
+    try {
+
+        const selectQuery = 'select * from users';
+
+        const usersdetails = await mysql.query(selectQuery);
+
+        return usersdetails;
+    }
+    catch (err) {
+        throw err;
+    }
+}
+const ChartDataOrdersDetails = async () => {
+    try {
+        const selectQuery = "SELECT SUM(totalAmount) as total, DATE(createdAt) as c_date FROM vellanki_db.orders group by c_date;"
+        const sele = "select COUNT(u.user_id) AS user_count,role_name from users u right join roles r on (u.role_id=r.role_id) group by r.role_id"
+        const userOrders = await mysql.query(selectQuery);
+
+        const usersdetailsdata = await mysql.query(sele);
+        return {
+            userOrders: userOrders[0], usersdetailsdata: usersdetailsdata[0]
+        }
+    }
+    catch (err) {
+        throw err;
+    }
+
+}
+const updateCategoryDataModel = async (editId, editName) => {
+    const query1 = "update categories set name=? where category_id=?"
+    await mysql.query(query1, [editName, editId])
+    return "updated the data"
+}
+const updateSubCategoryDataModel = async (editId, editName, deleteId) => {
+    if (parseInt(deleteId)) {
+
+        const query1 = "delete from sub_category where subcategory_id=?"
+        await mysql.query(query1, [deleteId])
+        return "deelted the data"
+    }
+    else {
+        const query1 = "update sub_category set name=? where subcategory_id=?"
+        await mysql.query(query1, [editName, editId])
+        return "updated the data"
+    }
+}
+const updateProductDataFieldsModel = async (product_id, product_name, description, weights) => {
+    try {
+        const queryData = "update product set product_name=? ,description=? where product_id=?"
+
+        await mysql.query(queryData, [product_name, description, product_id]);
+        await Promise.all(weights.map(async ({ weight_id, weight_value, weight_unit, price }) => {
+            const query2 = "UPDATE product_weight SET weight_value = ?, weight_unit = ?, price = ? WHERE product_id = ? AND weight_id = ?";
+            await mysql.query(query2, [weight_value, weight_unit, price, product_id, weight_id]);
+        }))
+        return "Product and weights updated successfully";
+    }
+    catch (err) {
+        throw err;
+    }
+
+}
+const deleteProductDataFieldsModel = async (deleteId) => {
+    const query3 = "delete from order_details where product_id=?"
+    await mysql.query(query3, [deleteId]);
+    console.log("deleteId", deleteId)
+    const query2 = "delete from product_weight where product_id=?"
+    await mysql.query(query2, [deleteId]);
+    const query = "delete from product where product_id=?"
+
+    await mysql.query(query, [deleteId]);
+
+    return "deleted successfully"
+}
+module.exports = { RegistrationDb, userExitsOrNot, loginData, verifyPassword, ProfileDataGet, insertCategory, insertSubCategory, fetchCategoryData, fetchSubCategoryDataDetails, insertProduct, fetchProductData, ProductDataDetails, FetchUserDataDetails, UpdatedUserDetailsOfOtp, updateVerifyOtp, UserDataModule, ShippingUserDataModule, OrderModule, OrderDetailsModule, FetchOrderDetails, SearchDbDetails, FetchDataBasedOnSubCategoryFieldDetails, FetchGetCategorySubCategoryDetailsDbData, OrderDataAdmin, UserDataAdmin, ChartDataOrdersDetails, updateCategoryDataModel, updateSubCategoryDataModel, updateProductDataFieldsModel, deleteProductDataFieldsModel }

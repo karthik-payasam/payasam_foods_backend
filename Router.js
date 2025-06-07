@@ -2,7 +2,9 @@ const express = require('express')
 const Razorpay = require("razorpay")
 const { upload } = require("./middlewares/multer")
 const router = express.Router();
-const { RegistrationData, LoginData, ProfileData, CategoryDataInsert, SubCategoryDataInsert, FetchSubCategory, CategoryDetails, insertProductDetails, ProductPriceQunatityDetails, FetchProductDetails, FetchProductData, RegistrationBasedOnOtp, ResendOtp, CreateOrder, OrderDetailsDataFetch, searchData, FetchDataBasedOnSubCategory, FetchGetCategorySubCategory } = require('./Controller/Controller');
+const { RegistrationData, LoginData, ProfileData, CategoryDataInsert, SubCategoryDataInsert, FetchSubCategory, CategoryDetails, FetchProductDetails, FetchProductData, RegistrationBasedOnOtp, ResendOtp, CreateOrder, OrderDetailsDataFetch, searchData, FetchDataBasedOnSubCategory, FetchGetCategorySubCategory, InsertionProduct, ordersData, usersData, ChartDataOrders
+    , updateCategoryData, updateSubCategoryData, updateProductData, deleteProductData
+} = require('./Controller/Controller');
 const { AuthenticatedUser } = require('./middlewares/AuthenticatedUser');
 router.post('/Registration', RegistrationData)
 router.post("/basedonEmailOtp", RegistrationBasedOnOtp)
@@ -14,11 +16,11 @@ router.get('/ProfileData', AuthenticatedUser, ProfileData)
 // router.post("/upload", upload.single('image'), (req, resp) => {
 //     console.log(req.file);
 // })
-router.post("/insert/category", upload.single('image'), CategoryDataInsert)
-router.post("/insert/sub_category", upload.single('image'), SubCategoryDataInsert)
+router.post("/insert/category", upload.single('category_image'), CategoryDataInsert)
+router.post("/insert/sub_category", upload.single('sub_category_image'), SubCategoryDataInsert)
 router.get("/getCategoryDetails", CategoryDetails)
-router.post("/insert/product", upload.single('product_image'), insertProductDetails)
-router.post("/insert/product/weightAndprice", ProductPriceQunatityDetails)
+// add productData
+router.post("/insert/productData", upload.single('product_image'), InsertionProduct)
 router.get("/fetch/AllproductDetailsbyCategory", FetchProductDetails)
 router.get("/fetch/ProductData", FetchProductData)
 
@@ -31,8 +33,25 @@ router.get("/order_Details/:Order_id", OrderDetailsDataFetch)
 router.get("/searchItems", searchData)
 router.get("/fetch/subcategories", FetchSubCategory)
 router.get("/fetch/ProductDataBasedOnSubCategory", FetchDataBasedOnSubCategory)
+
+//bargraph chart data orders
+router.get("/chardatabyorders", ChartDataOrders)
+//piechaert for the users
+
 //payments
 router.get("/fetch/getCategoryAndSubCategories", FetchGetCategorySubCategory)
+//update category data
+router.post("/updateCategory/:editId/:editName", updateCategoryData)
+//updat and ddelte the sub_category
+router.post("/updateSubCategory/:editId/:editName/:deleteId", updateSubCategoryData)
+//update the productData
+router.put("/updateProductData", updateProductData)
+router.delete("/deleteProductData/:deleteId", deleteProductData)
+//order data
+router.get("/fetchorderdata", ordersData)
+//userData
+router.get("/usersData", usersData)
+
 router.post('/ordersData', async (req, res) => {
     console.log("reqbody", req.body);
     const razorpay = new Razorpay({
@@ -78,6 +97,7 @@ router.get("/payment/:paymentId", async (req, res) => {
             return res.status(500).json("Error at razorpay loading")
         }
         console.log(payment);
+        console.log("status", payment.status)
         res.json({
             status: payment.status,
             method: payment.method,

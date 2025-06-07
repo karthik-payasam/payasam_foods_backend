@@ -1,6 +1,6 @@
-const { RegistrationField, LoginField, ProfileField, categoryField, SubcategoryField, FetchSubCategoryData, categoryDetailsField, ProductDetailsField, ProductPriceWeightDetailsField, FetchProductDetailsFiled, FetchProductDataField,
+const { RegistrationField, LoginField, ProfileField, categoryField, SubcategoryField, FetchSubCategoryData, categoryDetailsField, FetchProductDetailsFiled, FetchProductDataField,
     RegistrationBasedOnOtpFiled, ResendOtpFiled, CreateOrderField, FetchOrderData, SearchDataDetails,
-    FetchDataBasedOnSubCategoryField, FetchGetCategorySubCategoryDetails } = require('../Services/Service')
+    FetchDataBasedOnSubCategoryField, FetchGetCategorySubCategoryDetails, ProductInsertionield, OrderDataFields, UserDataFields, ChartDataOrdersField, updateCategoryDataField, updateSubCategoryDataField, updateProductDataFields, deleteProductDataFields } = require('../Services/Service')
 const RegistrationData = async (req, resp) => {
     try {
         await RegistrationField(req, resp)
@@ -65,24 +65,17 @@ const CategoryDetails = async (req, resp) => {
 
     }
 }
-const insertProductDetails = async (req, resp) => {
+const InsertionProduct = async (req, resp) => {
     try {
-        return await ProductDetailsField(req, resp)
+        return await ProductInsertionield(req, resp)
     }
     catch (err) {
         resp.status(500).json({ message: err.message })
 
     }
 }
-const ProductPriceQunatityDetails = async (req, resp) => {
-    try {
-        return await ProductPriceWeightDetailsField(req, resp)
-    }
-    catch (err) {
-        resp.status(500).json({ message: err.message })
 
-    }
-}
+
 const FetchProductDetails = async (req, resp) => {
     try {
         return await FetchProductDetailsFiled(req, resp)
@@ -167,5 +160,70 @@ const FetchGetCategorySubCategory = async (req, resp) => {
 
     }
 }//test
+const ordersData = async (req, resp) => {
+    try {
+        return await OrderDataFields(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
 
-module.exports = { RegistrationData, LoginData, ProfileData, CategoryDataInsert, SubCategoryDataInsert, FetchSubCategory, CategoryDetails, insertProductDetails, ProductPriceQunatityDetails, FetchProductDetails, FetchProductData, RegistrationBasedOnOtp, ResendOtp, CreateOrder, OrderDetailsDataFetch, searchData, FetchDataBasedOnSubCategory, FetchGetCategorySubCategory }
+    }
+}
+const usersData = async (req, resp) => {
+    try {
+        return await UserDataFields(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
+
+    }
+}
+const ChartDataOrders = async (req, resp) => {
+    try {
+        return await ChartDataOrdersField(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
+
+    }
+}
+const updateCategoryData = async (req, resp) => {
+    try {
+        return await updateCategoryDataField(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
+
+    }
+
+}
+const updateSubCategoryData = async (req, resp) => {
+    try {
+        return await updateSubCategoryDataField(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
+
+    }
+
+}
+const updateProductData = async (req, resp) => {
+    try {
+        return await updateProductDataFields(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
+
+    }
+
+}
+const deleteProductData = async (req, resp) => {
+    try {
+        return await deleteProductDataFields(req, resp)
+    }
+    catch (err) {
+        resp.status(500).json({ message: err.message })
+
+    }
+}
+module.exports = { RegistrationData, LoginData, ProfileData, CategoryDataInsert, SubCategoryDataInsert, FetchSubCategory, CategoryDetails, InsertionProduct, FetchProductDetails, FetchProductData, RegistrationBasedOnOtp, ResendOtp, CreateOrder, OrderDetailsDataFetch, searchData, FetchDataBasedOnSubCategory, FetchGetCategorySubCategory, ordersData, usersData, ChartDataOrders, updateCategoryData, updateSubCategoryData, updateProductData, deleteProductData }

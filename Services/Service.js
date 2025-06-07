@@ -1,9 +1,10 @@
-const { RegistrationDb, userExitsOrNot, loginData, verifyPassword, ProfileDataGet, insertCategory, insertSubCategory, fetchCategoryData, fetchSubCategoryDataDetails, insertProduct, insertProductweightprice, fetchProductData, ProductDataDetails, FetchUserDataDetails, UpdatedUserDetailsOfOtp, updateVerifyOtp, UserDataModule, ShippingUserDataModule, OrderModule, OrderDetailsModule, FetchOrderDetails, SearchDbDetails, FetchDataBasedOnSubCategoryFieldDetails, FetchGetCategorySubCategoryDetailsDbData } = require('../Model/Model')
+const { RegistrationDb, userExitsOrNot, loginData, verifyPassword, ProfileDataGet, insertCategory, insertSubCategory, fetchCategoryData, fetchSubCategoryDataDetails, insertProduct, fetchProductData, ProductDataDetails, FetchUserDataDetails, UpdatedUserDetailsOfOtp, updateVerifyOtp, UserDataModule, ShippingUserDataModule, OrderModule, OrderDetailsModule, FetchOrderDetails, SearchDbDetails, FetchDataBasedOnSubCategoryFieldDetails, FetchGetCategorySubCategoryDetailsDbData, OrderDataAdmin, UserDataAdmin, ChartDataOrdersDetails, updateCategoryDataModel, updateSubCategoryDataModel, updateProductDataFieldsModel, deleteProductDataFieldsModel } = require('../Model/Model')
 const { Validation, order_userData_Validation } = require('./Validation')
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = "your_secret_key";
 const main = require("../Mail/mail");
 const MailUi = require('../Mail/mailUi');
+const { json } = require('body-parser');
 const RegistrationField = async (req, resp) => {
 
     try {
@@ -103,19 +104,19 @@ const ProfileField = async (req, resp) => {
 }
 
 const categoryField = async (req, resp) => {
-    const { imageName } = req.body
-    const image = req.file.filename;
-    console.log(image);
-    console.log(imageName)
-    const insertData = await insertCategory(imageName, image);
+    const { category_name, description } = req.body
+    const category_image = req.file.filename;
+    console.log(category_image);
+    console.log("desction server", description);
+    const insertData = await insertCategory(category_name, category_image, description);
     return resp.status(200).json({ message: "inserted the data in category", insertData });
 }
 const SubcategoryField = async (req, resp) => {
-    const { imageName, category_id } = req.body
-    const image = req.file.filename;
-    console.log(image);
-    console.log(imageName)
-    const insertData = await insertSubCategory(imageName, image, category_id);
+    const { sub_category_name, category_id } = req.body
+    console.log(sub_category_name, category_id)
+    const sub_category_image = req.file.filename;
+    console.log(sub_category_image);
+    const insertData = await insertSubCategory(sub_category_name, sub_category_image, category_id);
     return resp.status(200).json({ message: "inserted the data in category", insertData });
 }
 const FetchSubCategoryData = async (req, resp) => {
@@ -136,22 +137,18 @@ const categoryDetailsField = async (req, resp) => {
     return resp.status(200).json({ message: "fetch the data in category", categoryDataDetails });
 }
 
-const ProductDetailsField = async (req, resp) => {
+const ProductInsertionield = async (req, resp) => {
     const { product_name, description, category_id } = req.body;
     const product_image = req.file.filename;
-    const ProductData = await insertProduct(product_name, product_image, description, category_id);
-
-    return resp.status(200).json({ message: "fetch the data in category", ProductData });
+    const weights = JSON.parse(req.body.weights);
+    const ProductData = await insertProduct(product_name, product_image, description, category_id, weights);
+    return resp.status(200).json({ message: "ProductData is Inserted.." });
 }
-const ProductPriceWeightDetailsField = async (req, resp) => {
-    const { product_id, weight_value, weight_unit, price, stock_quantity } = req.body;
 
-    const ProductpriceData = await insertProductweightprice(product_id, weight_value, weight_unit, price, stock_quantity);
 
-    return resp.status(200).json({ message: "fetch the data in category", ProductpriceData });
-}
 const FetchProductDetailsFiled = async (req, resp) => {
     const { category_id, sub_category_id, sort } = req.query
+    console.log("sub_category_id", category_id, sub_category_id)
     const categoryData = await fetchProductData(category_id, sub_category_id, sort);
     const categoryDataDetails = categoryData;
     return resp.status(200).json({ message: "fetch the data in category", categoryDataDetails });
@@ -288,4 +285,85 @@ const FetchGetCategorySubCategoryDetails = async (req, resp) => {
 
 }
 
-module.exports = { RegistrationField, LoginField, ProfileField, categoryField, SubcategoryField, FetchSubCategoryData, categoryDetailsField, ProductDetailsField, ProductPriceWeightDetailsField, FetchProductDetailsFiled, FetchProductDataField, RegistrationBasedOnOtpFiled, ResendOtpFiled, User_DataField, Shipping_DataField, OrderDataField, OrderDetailsField, CreateOrderField, FetchOrderData, SearchDataDetails, FetchDataBasedOnSubCategoryField, FetchGetCategorySubCategoryDetails }
+const OrderDataFields = async (req, resp) => {
+    try {
+        const OrderData = await OrderDataAdmin();
+        return resp.status(200).json({ message: "fetch the data in orders", OrderData });
+    }
+    catch (err) {
+        console.error("Error in datafetch:", err);
+        resp.status(500).json({ message: err.message });
+    }
+}
+const UserDataFields = async (req, resp) => {
+    try {
+        const OrderData = await UserDataAdmin();
+        return resp.status(200).json({ message: "fetch the data in orders", OrderData });
+    }
+    catch (err) {
+        console.error("Error in datafetch:", err);
+        resp.status(500).json({ message: err.message });
+    }
+}
+const ChartDataOrdersField = async (req, resp) => {
+    try {
+        const OrderData = await ChartDataOrdersDetails();
+        return resp.status(200).json({ message: "fetch the data in orders", OrderData });
+    }
+    catch (err) {
+        console.error("Error in datafetch:", err);
+        resp.status(500).json({ message: err.message });
+    }
+}
+const updateCategoryDataField = async (req, resp) => {
+    const { editId, editName } = req.params
+
+    console.log(editId, editName);
+    try {
+        const updateData = await updateCategoryDataModel(editId, editName);
+        return resp.status(200).json({ message: "update the data in category page...", updateData });
+    }
+    catch (err) {
+        console.error("Error in updatedata:", err);
+        resp.status(500).json({ message: err.message });
+    }
+}
+const updateSubCategoryDataField = async (req, resp) => {
+    const { editId, editName, deleteId } = req.params
+
+    console.log(editId, editName, deleteId);
+    try {
+        const updateData = await updateSubCategoryDataModel(editId, editName, deleteId);
+        return resp.status(200).json({ message: "update the data in category page...", updateData });
+    }
+    catch (err) {
+        console.error("Error in updatedata:", err);
+        resp.status(500).json({ message: err.message });
+    }
+}
+const updateProductDataFields = async (req, resp) => {
+    const { product_id, product_name, description, weights } = req.body
+
+    try {
+        const updateData = await updateProductDataFieldsModel(product_id, product_name, description, weights);
+        return resp.status(200).json({ message: "update the data in category page...", updateData });
+    }
+    catch (err) {
+        console.error("Error in updatedata:", err);
+        resp.status(500).json({ message: err.message });
+    }
+}
+const deleteProductDataFields = async (req, resp) => {
+    const { deleteId } = req.params
+    try {
+        const deleteData = await deleteProductDataFieldsModel(deleteId);
+        return resp.status(200).json({ message: "deelted of the product data", deleteData });
+    }
+    catch (err) {
+        console.error("Error in delete:", err);
+        resp.status(500).json({ message: err.message });
+    }
+
+
+}
+module.exports = { RegistrationField, LoginField, ProfileField, categoryField, SubcategoryField, FetchSubCategoryData, categoryDetailsField, ProductInsertionield, FetchProductDetailsFiled, FetchProductDataField, RegistrationBasedOnOtpFiled, ResendOtpFiled, User_DataField, Shipping_DataField, OrderDataField, OrderDetailsField, CreateOrderField, FetchOrderData, SearchDataDetails, FetchDataBasedOnSubCategoryField, FetchGetCategorySubCategoryDetails, OrderDataFields, UserDataFields, ChartDataOrdersField, updateCategoryDataField, updateSubCategoryDataField, updateProductDataFields, deleteProductDataFields }
